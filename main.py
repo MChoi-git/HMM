@@ -103,12 +103,13 @@ def create_init_matrix(sentences, tags, word_dict, tag_dict):
 def main():
     """ Main script for running learnhmm and forwardbackward
 
-    :param train_input:
-    :param index_to_word:
-    :param index_to_tag:
-    :param hmm_prior:
-    :param hmm_emit:
-    :param hmm_trans:
+    Argv:
+        train_input: Path to training dataset
+        index_to_word: Path to index2word .txt file
+        index_to_tag: Path to index2tag .txt file
+        hmm_prior: Path to output file for the prior matrix (initialization)
+        hmm_emit: Path to output file for the emission matrix
+        hmm_trans: Path to output file for the transition matrix
 
     :return: Returns 1 on success, -1 on error
     """
@@ -124,6 +125,7 @@ def main():
     create_emit_matrix(sentences, tags, word_dict, tag_dict)
     create_trans_matrix(sentences, tags, word_dict, tag_dict)
     create_init_matrix(sentences, tags, word_dict, tag_dict)
+
 
 if __name__ == "__main__":
     main()
