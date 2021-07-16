@@ -33,7 +33,7 @@ def main():
     hmm.matrix_to_txt(hmm_trans, trans_matrix)
     hmm.matrix_to_txt(hmm_prior, prior_matrix)
     # Do the forward computation for alpha
-    fb.forward(emit_matrix, trans_matrix, prior_matrix, sentences)
+    fb.forward(emit_matrix, trans_matrix, prior_matrix, sentences, tags, word_dict, tag_dict)
 
 
 if __name__ == "__main__":
