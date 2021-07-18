@@ -10,14 +10,10 @@ def forward(emit_matrix, trans_matrix, prior_matrix, sentences, tags, word_dict,
     :param prior_matrix:
     :param sentences:
     :param tags:
+    :param word_dict:
+    :param tag_dict:
     :return:
     """
-    # longest_sentence = []
-    # for sentence in sentences:
-    #     if len(sentence) > len(longest_sentence):
-    #         longest_sentence = sentence
-    # longest_sentence = len(longest_sentence)
-    # alpha_matrix = np.zeros((longest_sentence, prior_matrix.size))
     alpha = []
     for sentence, tag_line in zip(sentences, tags):
         alpha_sentence = np.zeros((len(trans_matrix), len(sentence)))   # Alpha is JxT
@@ -35,7 +31,7 @@ def forward(emit_matrix, trans_matrix, prior_matrix, sentences, tags, word_dict,
                     result = emit_matrix[k][word_dict[x_n]] * summation_term
                     if alpha_sentence[:, t_n][k] != 0:  # Check that element assignment indexing tiles properly
                         print("Alpha values overlapping!")
-                        break;
+                        break
                     alpha_sentence[:, t_n][k] = result
                 alpha_sentence[:, t_n] /= alpha_sentence[:, t_n].sum()
         alpha.append(alpha_sentence)
@@ -43,18 +39,28 @@ def forward(emit_matrix, trans_matrix, prior_matrix, sentences, tags, word_dict,
     return alpha
 
 
+def backward(emit_matrix, trans_matrix, prior_matrix, sentences, tags, word_dict, tag_dict):
+    """ Does the forward computation, which creates the alpha matrix
 
-
-    # # Calculate all alpha_1 for each tag
-    # alpha_prior = emit_matrix[:, 0] * prior_matrix
-    # alpha_prior /= alpha_prior.sum(axis=0, keepdims=True)
-    # alpha_previous = alpha_prior
-    # alpha_matrix = np.zeros((len(emit_matrix[0]) - 1, len(emit_matrix)))
-    # # Calculate the summation term in alpha for t > 1
-    # for x_n in range(len(emit_matrix[0]) - 1):
-    #     for tag_n in range(len(trans_matrix)):
-    #         alpha_matrix[tag_n][x_n] = emit_matrix[tag_n][x_n + 1] * (alpha_previous * trans_matrix[tag_n]).sum()
-    #     alpha_matrix[:, x_n] /= alpha_matrix[:, x_n].sum()
-    #     alpha_previous = alpha_matrix[:, x_n]
-    # print(alpha_matrix)
+    :param emit_matrix:
+    :param trans_matrix:
+    :param prior_matrix:
+    :param sentences:
+    :param tags:
+    :param word_dict:
+    :param tag_dict:
+    :return:
+    """
+    beta = []
+    for sentence, tag_line in zip(sentences, tags):
+        beta_sentence = np.zeros((len(trans_matrix), len(sentence)))    # Beta is JxT
+        for t_n, tag in zip(reversed(range(len(tag_line))), tag_line):
+            if t_n == len(tag_line) - 1:    # Every state can be an ending state, beta@T = 1 for all states
+                beta_sentence[:, len(tag_line) - 1] = 1
+            else:   # Summation term
+                x_n = sentence[t_n + 1]  # Keep track of word
+                beta_sentence[:, t_n] = (trans_matrix * beta_sentence[:, t_n + 1] * emit_matrix[:,  word_dict[x_n]]).sum(axis=-1, keepdims=True).flatten()
+            beta_sentence[:, t_n] /= beta_sentence[:, t_n].sum(axis=0, keepdims=True)
+        beta.append(beta_sentence)
+    print(beta)
     return
