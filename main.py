@@ -1,6 +1,8 @@
 import sys
 import learnhmm as hmm
 import forwardbackward as fb
+import numpy as np
+from itertools import chain
 
 
 def main():
@@ -33,9 +35,30 @@ def main():
     hmm.matrix_to_txt(hmm_trans, trans_matrix)
     hmm.matrix_to_txt(hmm_prior, prior_matrix)
     # Do the forward computation for alpha
-    fb.forward(emit_matrix, trans_matrix, prior_matrix, sentences, tags, word_dict, tag_dict)
-    fb.backward(emit_matrix, trans_matrix, prior_matrix, sentences, tags, word_dict, tag_dict)
-
+    alpha = fb.forward(emit_matrix, trans_matrix, prior_matrix, sentences, tags, word_dict, tag_dict)
+    beta = fb.backward(emit_matrix, trans_matrix, prior_matrix, sentences, tags, word_dict, tag_dict)
+    conditional_probabilities = fb.get_conditional_probabilities(alpha, beta)
+    # Lazy prediction section
+    # Should be refactored ASAP
+    tags_index = []
+    preds = []
+    # Get the label indexes according to prob dist.
+    for example in conditional_probabilities:
+        tags_index_example = np.argmax(example, axis=0)
+        tags_index.append(tags_index_example)
+    # Get the predictions and put them back in format
+    for i, example in enumerate(tags_index):
+        for j in range(len(example)):
+            preds += [f"{sentences[i][j]}_{list(tag_dict.keys())[list(tag_dict.values()).index(example[j])]}"]
+    # Calculate the accuracy
+    wrong = 0
+    flat_sentences = list(chain.from_iterable(sentences))
+    flat_tags = list(chain.from_iterable(tags))
+    for i in range(len(flat_sentences)):
+        if preds[i] != f"{flat_sentences[i]}_{flat_tags[i]}":
+            wrong += 1
+    accuracy = 1 - wrong / len(flat_sentences)
+    print(f"Accuracy: {accuracy}")
 
 if __name__ == "__main__":
     main()
