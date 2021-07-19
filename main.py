@@ -60,5 +60,6 @@ def main():
     accuracy = 1 - wrong / len(flat_sentences)
     print(f"Accuracy: {accuracy}")
 
+
 if __name__ == "__main__":
     main()

@@ -1,7 +1,6 @@
 import numpy as np
 
 
-# IMPORTANT: The alpha is not a matrix, but a 3D TENSOR, JxMxD
 def forward(emit_matrix, trans_matrix, prior_matrix, sentences, tags, word_dict, tag_dict):
     """ Does the forward computation, which creates a collection of alpha matrices
 
@@ -26,11 +25,6 @@ def forward(emit_matrix, trans_matrix, prior_matrix, sentences, tags, word_dict,
                 alpha_sentence[:, 0] /= alpha_sentence[:, 0].sum()
             # Calculate rest of alpha
             else:
-                x1 = emit_matrix[:, word_dict[x_n]]
-                x2 = trans_matrix.T
-                x5 = trans_matrix
-                x3 = alpha_sentence[:, t_n - 1]
-                x4 = trans_matrix.T * alpha_sentence[:, t_n - 1]
                 alpha_sentence[:, t_n] = emit_matrix[:, word_dict[x_n]] * (trans_matrix.T * alpha_sentence[:, t_n - 1]).sum(axis=-1, keepdims=True).flatten()
             if t_n != len(tag_line) - 1:
                 alpha_sentence[:, t_n] /= alpha_sentence[:, t_n].sum()
@@ -68,8 +62,14 @@ def backward(emit_matrix, trans_matrix, prior_matrix, sentences, tags, word_dict
 
 
 def get_conditional_probabilities(alpha, beta):
+    """ Calculates the conditional probabilities between the alpha and beta matrices
+
+    :param alpha: Forward computation matrix
+    :param beta: Backward computation matrix
+    :return: Conditional probabilities
+    """
     cond_probs = [ex_a * ex_b for ex_a, ex_b in zip(alpha, beta)]
-    # for example in cond_probs:
-    #     example /= example.sum(axis=0, keepdims=True)
+    for example in cond_probs:
+        example /= example.sum(axis=0, keepdims=True)
 
     return cond_probs
